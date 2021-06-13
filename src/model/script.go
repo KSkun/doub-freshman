@@ -53,6 +53,7 @@ type Stage struct {
 	ID        primitive.ObjectID `bson:"_id"`
 	Title     string             `bson:"title"`
 	Text      string             `bson:"text"`
+	Dead      bool               `bson:"dead"`
 	EnterCond []Condition        `bson:"enter_cond"`
 	Option    []Option           `bson:"option"`
 	Event     []Event            `bson:"event"`
