@@ -50,3 +50,47 @@ type RspSelectStage struct {
 	RspGameSync
 	FlagDiff []FlagDiff `json:"flag_diff"`
 }
+
+
+type ReqFlag struct {
+	Text  string  `json:"text"`
+	Value float64 `json:"value"`
+	Hide  bool    `json:"hide"`
+}
+
+
+type ReqCondition struct {
+	Flag  string  `json:"flag"`
+	Op    string  `json:"op"`
+	Value float64 `json:"value"`
+}
+
+type ReqOptionBranch struct {
+	Next string `json:"next"`
+	Text string             `json:"text"`
+}
+
+type ReqOption struct {
+	Text      string       `json:"text"`
+	Success   ReqOptionBranch `json:"success"`
+	Failed    ReqOptionBranch `json:"failed"`
+	Condition []ReqCondition  `json:"condition"`
+}
+type ReqEvent struct {
+	Type  string                 `json:"type"`
+	Value map[string]interface{} `json:"value"`
+}
+
+type ReqStage struct {
+	ID        string `json:"_id"`
+	Title     string             `json:"title"`
+	Text      string             `json:"text"`
+	Dead      bool               `json:"dead"`
+	EnterCond []ReqCondition        `json:"enter_cond"`
+	Option    []ReqOption           `json:"option"`
+	Event     []ReqEvent            `json:"event"`
+	Tag       string             `json:"tag"`
+
+	Continue bool `json:"continue"`
+	Delay    int  `json:"delay"`
+}

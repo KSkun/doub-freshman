@@ -39,6 +39,7 @@ type Model interface {
 	cRecord() *mongo.Collection
 	GetRecordByName(name string) (Record, bool, error)
 	NewRecord(name string, playerID string) error
+	AddStages(stages []Stage)error
 }
 
 type model struct {

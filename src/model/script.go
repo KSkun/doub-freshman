@@ -4,6 +4,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/net/context"
 )
 
 type Flag struct {
@@ -110,4 +111,17 @@ func (m *model) GetStageByHex(hex string) (Stage, error) {
 		return Stage{}, err
 	}
 	return m.GetStage(id)
+}
+
+func (m *model) AddStages(stages []Stage)error{
+	var stagesInterface []interface{}
+	for _,stage:=range stages{
+		stagesInterface=append(stagesInterface,stage)
+	}
+
+	_,err:=m.cStage().InsertMany(context.Background(),stagesInterface)
+	if err!=nil{
+		return err
+	}
+	return nil
 }

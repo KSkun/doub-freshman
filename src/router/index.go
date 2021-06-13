@@ -14,4 +14,5 @@ func initIndexRouter(g *echo.Group) {
 	g.POST("/new", controller.HandlerNewGame)
 	g.PUT("/option", controller.HandlerSelectOption)
 	g.PUT("/stage", controller.HandlerSelectStage)
+	g.POST("/stage", controller.HandlePostStage)
 }
