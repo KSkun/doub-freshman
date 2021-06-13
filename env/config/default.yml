@@ -1,0 +1,19 @@
+# 默认的配置文件，通常用于本地调试
+app:
+  addr: ":3000"
+  prefix: "/api/v1"
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+db:
+  addr: "localhost:27017"
+  db: "doub-freshman"
+  username: ""
+  password: ""
+
+logConf:
+  log_path: "log"
+  log_file_name: "doub-freshman.log"
+
+debug: true
