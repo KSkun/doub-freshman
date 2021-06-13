@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/KSkun/doub-freshman/controller"
 	"github.com/labstack/echo/v4"
 )
 
@@ -11,5 +12,5 @@ func InitRouter(g *echo.Group) {
 }
 
 func initIndexRouter(g *echo.Group) {
-
+	g.POST("/new", controller.HandlerNewGame)
 }

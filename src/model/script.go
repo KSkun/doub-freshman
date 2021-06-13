@@ -1,6 +1,10 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type Flag struct {
 	Text  string  `bson:"text" json:"text"`
@@ -14,7 +18,7 @@ type Flag struct {
 	flag, op, value:    require a flag with value satisfying the expression
 		op: gt, lt, gte, lte, eq, neq
 	flag, exclude:      when a flag exists, exclude this stage in selections (entrance only)
-	prob, 0.1:          set success probability
+	prob, 0.1:          set success probability (option only)
 */
 
 type Condition struct {
@@ -29,6 +33,7 @@ type OptionBranch struct {
 }
 
 type Option struct {
+	Text      string       `bson:"text"`
 	Success   OptionBranch `bson:"success"`
 	Failed    OptionBranch `bson:"failed"`
 	Condition []Condition  `bson:"condition"`
@@ -61,4 +66,48 @@ type Stage struct {
 
 	Continue bool `bson:"continue"`
 	Delay    int  `bson:"delay"`
+}
+
+func (m *model) cStage() *mongo.Collection {
+	return m.db.Collection("stage")
+}
+
+func (m *model) GetStageWithCondition(condition bson.M) ([]Stage, error) {
+	result, err := m.cStage().Find(m.ctx, condition)
+	if err != nil {
+		return nil, err
+	}
+	var stage []Stage
+	err = result.All(m.ctx, &stage)
+	return stage, err
+}
+
+func (m *model) GetStageWithFlags(flag []string) ([]Stage, error) {
+	var filter []bson.M
+	for _, _flag := range flag {
+		filter = append(filter, bson.M{"enter_cond": bson.M{"flag": _flag}})
+	}
+	return m.GetStageWithCondition(bson.M{"$and": filter})
+}
+
+func (m *model) GetStageWithFlag(flag string) ([]Stage, error) {
+	return m.GetStageWithFlags([]string{flag})
+}
+
+func (m *model) GetStageWithFlagExclude(flag string) ([]Stage, error) {
+	return m.GetStageWithCondition(bson.M{"enter_cond": bson.M{"flag": flag, "op": "exclude"}})
+}
+
+func (m *model) GetStage(id primitive.ObjectID) (Stage, error) {
+	stage := Stage{}
+	err := m.cStage().FindOne(m.ctx, bson.M{"_id": id}).Decode(&stage)
+	return stage, err
+}
+
+func (m *model) GetStageByHex(hex string) (Stage, error) {
+	id, err := primitive.ObjectIDFromHex(hex)
+	if err != nil {
+		return Stage{}, err
+	}
+	return m.GetStage(id)
 }

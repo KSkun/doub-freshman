@@ -23,3 +23,5 @@ redis/
 
 src/go.sum
 env/log
+
+test/

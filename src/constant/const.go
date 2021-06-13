@@ -3,4 +3,6 @@
 package constant
 
 const (
+	RoundHoliday = 3
+	RoundDaily = 15
 )

@@ -3,6 +3,9 @@ package model
 import (
 	"context"
 	"github.com/KSkun/doub-freshman/config"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -21,7 +24,21 @@ type Model interface {
 	Close()
 	// 终止操作，用于如事务的取消
 	Abort()
-	// TODO: 将Model层的实现列在这里，然后再去实现model结构体中的对应实现
+
+	cStage() *mongo.Collection
+	GetStageWithCondition(condition bson.M) ([]Stage, error)
+	GetStageWithFlags(flag []string) ([]Stage, error)
+	GetStageWithFlag(flag string) ([]Stage, error)
+	GetStage(id primitive.ObjectID) (Stage, error)
+	GetStageByHex(hex string) (Stage, error)
+	GetStageWithFlagExclude(flag string) ([]Stage, error)
+
+	SetPlayer(player Player) error
+	GetPlayer(id string) (Player, error)
+
+	cRecord() *mongo.Collection
+	GetRecordByName(name string) (Record, bool, error)
+	NewRecord(name string, playerID string) error
 }
 
 type model struct {
