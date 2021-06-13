@@ -3,11 +3,11 @@ app:
   addr: ":3000"
   prefix: "/api/v1"
 redis:
-  addr: "192.168.99.100:6379"
+  addr: "localhost:6379"
   password: ""
   db: 0
 db:
-  addr: "192.168.99.100:27017"
+  addr: "localhost:27017"
   db: "doub-freshman"
   username: ""
   password: ""

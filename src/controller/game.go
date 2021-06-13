@@ -378,12 +378,13 @@ func switchPhase(player model.Player) (model.Player, []param.FlagDiff, error) {
 func selectStage(_player model.Player, stageID string) (model.Player, []param.FlagDiff, error) {
 	var _flagDiff []param.FlagDiff
 	found := false
-	if _player.Next != "" && _player.Next == stageID {
-		found = true
-	} else {
-		return _player, nil, errors.New("continuing stage exists")
-	}
-	if _player.Next == "" {
+	if _player.Next != "" {
+		if _player.Next == stageID {
+			found = true
+		} else {
+			return _player, nil, errors.New("continuing stage exists")
+		}
+	}else {
 		for _, stage := range _player.Selection {
 			if stage == stageID {
 				found = true
