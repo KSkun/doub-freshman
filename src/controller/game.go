@@ -67,6 +67,10 @@ func checkCompCond(flag model.Flag, cond model.Condition) bool {
 }
 
 func checkSingleCond(player model.Player, cond model.Condition) bool {
+	if cond.Op == "prob" {
+		r := rand.Float64()
+		return r < cond.Value
+	}
 	for _, _flag := range player.Flag {
 		if _flag.Text == cond.Flag {
 			if cond.Op == "" {
@@ -74,10 +78,6 @@ func checkSingleCond(player model.Player, cond model.Condition) bool {
 			}
 			if cond.Op == "exclude" {
 				return false
-			}
-			if cond.Op == "prob" {
-				r := rand.Float64()
-				return r < cond.Value
 			}
 			return checkCompCond(_flag, cond)
 		}
@@ -265,34 +265,42 @@ func newPlayer(name string, major string) (model.Player, error) {
 	return player, nil
 }
 
-func selectOption(_player model.Player, _option int) (model.Player, error) {
+func selectOption(_player model.Player, _option int) (model.Player, []param.FlagDiff, error) {
 	m := model.GetModel()
 	defer m.Close()
 	stage, err := m.GetStageByHex(_player.NowStage)
 	if err != nil {
-		return _player, err
+		return _player, nil, err
 	}
 	if _option < 0 || _option >= len(stage.Option) {
-		return _player, errors.New("option index out of bound")
+		return _player, nil, errors.New("option index out of bound")
 	}
 	option := stage.Option[_option]
-	nextID := primitive.ObjectID{}
+	branch := model.OptionBranch{}
 	if checkCondList(_player, option.Condition) {
-		nextID = option.Success.Next
+		branch = option.Success
 	} else {
-		nextID = option.Failed.Next
+		branch = option.Failed
 	}
-	next, err := m.GetStage(nextID)
+	// select a branch pointing to an empty stage
+	if branch.Next == primitive.NilObjectID {
+		return _player, nil, nil
+	}
+	next, err := m.GetStage(branch.Next)
 	if err != nil {
-		return _player, err
+		return _player, nil, err
 	}
 	player := _player
-	if next.Continue {
-		player.Next = nextID.Hex()
-	} else {
-		player.Selection = append(player.Selection, nextID.Hex())
+	player, _flagDiff, err := applyEventList(player, branch.Event)
+	if err != nil {
+		return _player, nil, err
 	}
-	return player, err
+	if next.Continue {
+		player.Next = branch.Next.Hex()
+	} else {
+		player.Selection = append(player.Selection, branch.Next.Hex())
+	}
+	return player, _flagDiff, err
 }
 
 func applySingleEvent(player model.Player, event model.Event) (model.Player, []param.FlagDiff, error) {
@@ -384,7 +392,7 @@ func selectStage(_player model.Player, stageID string) (model.Player, []param.Fl
 		} else {
 			return _player, nil, errors.New("continuing stage exists")
 		}
-	}else {
+	} else {
 		for _, stage := range _player.Selection {
 			if stage == stageID {
 				found = true
@@ -398,21 +406,13 @@ func selectStage(_player model.Player, stageID string) (model.Player, []param.Fl
 
 	m := model.GetModel()
 	defer m.Close()
-	stage, err := m.GetStageByHex(_player.NowStage)
-	if err != nil {
-		return _player, nil, err
-	}
 	player := _player
 	player.NowStage = stageID
-	player, __flagDiff, err := applyEventList(player, stage.Event)
-	if err != nil {
-		return _player, nil, err
-	}
-	_flagDiff = append(_flagDiff, __flagDiff...)
 	player.LeftRound--
 	// if a continuing stage is waiting to be trigger, do not switch phase
 	if player.LeftRound <= 0 && player.Next == "" {
 		var __flagDiff []param.FlagDiff
+		var err error
 		player, __flagDiff, err = switchPhase(player)
 		if err != nil {
 			return _player, nil, err

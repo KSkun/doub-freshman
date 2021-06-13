@@ -46,7 +46,7 @@ type FlagDiff struct {
 	Value float64 `json:"value"`
 }
 
-type RspSelectStage struct {
+type RspSyncWithDiff struct {
 	RspGameSync
 	FlagDiff []FlagDiff `json:"flag_diff"`
 }

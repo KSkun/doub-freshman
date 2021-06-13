@@ -29,8 +29,9 @@ type Condition struct {
 }
 
 type OptionBranch struct {
-	Next primitive.ObjectID `bson:"next"`
-	Text string             `bson:"text"`
+	Next  primitive.ObjectID `bson:"next"`
+	Text  string             `bson:"text"`
+	Event []Event            `bson:"event"`
 }
 
 type Option struct {
@@ -62,7 +63,6 @@ type Stage struct {
 	Dead      bool               `bson:"dead"`
 	EnterCond []Condition        `bson:"enter_cond"`
 	Option    []Option           `bson:"option"`
-	Event     []Event            `bson:"event"`
 	Tag       string             `bson:"tag"`
 
 	Continue bool `bson:"continue"`
@@ -113,14 +113,14 @@ func (m *model) GetStageByHex(hex string) (Stage, error) {
 	return m.GetStage(id)
 }
 
-func (m *model) AddStages(stages []Stage)error{
+func (m *model) AddStages(stages []Stage) error {
 	var stagesInterface []interface{}
-	for _,stage:=range stages{
-		stagesInterface=append(stagesInterface,stage)
+	for _, stage := range stages {
+		stagesInterface = append(stagesInterface, stage)
 	}
 
-	_,err:=m.cStage().InsertMany(context.Background(),stagesInterface)
-	if err!=nil{
+	_, err := m.cStage().InsertMany(context.Background(), stagesInterface)
+	if err != nil {
 		return err
 	}
 	return nil

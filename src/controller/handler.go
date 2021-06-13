@@ -111,7 +111,7 @@ func HandlerSelectOption(ctx echo.Context) error {
 	if err != nil {
 		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
 	}
-	player, err = selectOption(player, req.Option)
+	player, _flagDiff, err := selectOption(player, req.Option)
 	if err != nil {
 		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
 	}
@@ -119,11 +119,14 @@ func HandlerSelectOption(ctx echo.Context) error {
 	if err != nil {
 		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
 	}
-	rsp, err := makeRspGameSync(player)
+	_rsp, err := makeRspGameSync(player)
 	if err != nil {
 		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
 	}
-	return context.Success(ctx, rsp)
+	return context.Success(ctx, param.RspSyncWithDiff{
+		RspGameSync: _rsp,
+		FlagDiff:    _flagDiff,
+	})
 }
 
 func HandlerSelectStage(ctx echo.Context) error {
@@ -153,7 +156,7 @@ func HandlerSelectStage(ctx echo.Context) error {
 	if err != nil {
 		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
 	}
-	return context.Success(ctx, param.RspSelectStage{
+	return context.Success(ctx, param.RspSyncWithDiff{
 		RspGameSync: _rsp,
 		FlagDiff:    _flagDiff,
 	})
