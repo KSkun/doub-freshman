@@ -16,7 +16,13 @@ func makeRspNextStage(stage model.Stage) param.RspNextStage {
 	for _, _option := range stage.Option {
 		option = append(option, _option.Text)
 	}
-	return param.RspNextStage{ID: stage.ID.Hex(), Text: stage.Text, Option: option}
+	return param.RspNextStage{
+		ID:     stage.ID.Hex(),
+		Text:   stage.Text,
+		Title:  stage.Title,
+		Option: option,
+		Delay:  stage.Delay,
+	}
 }
 
 func makeRspGameSync(player model.Player) (param.RspGameSync, error) {

@@ -12,8 +12,10 @@ type RspPlayerInfo struct {
 
 type RspNextStage struct {
 	ID     string   `json:"id"`
+	Title  string   `json:"title"`
 	Text   string   `json:"text"`
 	Option []string `json:"option"`
+	Delay  int      `json:"delay"`
 }
 
 type RspGameSync struct {
