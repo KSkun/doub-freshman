@@ -18,7 +18,7 @@ type Flag struct {
 	flag, op, value:    require a flag with value satisfying the expression
 		op: gt, lt, gte, lte, eq, neq
 	flag, exclude:      when a flag exists, exclude this stage in selections (entrance only)
-	prob, 0.1:          set success probability (option only)
+	<empty>, prob, 0.1: set success probability (option only)
 */
 
 type Condition struct {
@@ -42,11 +42,11 @@ type Option struct {
 /*
 	Event types: flag, death, extend
 	Event patterns:
-	flag:               add a flag
-	flag, delete=true:  delete a flag
-	flag, inc=10:       increase the value of a flag
-	death:              set the player dead
-	extend:             extend the round number of current phase
+	flag, flag=name:                add a flag
+	flag, flag=name, delete=true:   delete a flag
+	flag, flag=name, inc=10:        increase the value of a flag
+	death:                          set the player dead
+	extend, extend=1:               extend the round number of current phase
 */
 
 type Event struct {

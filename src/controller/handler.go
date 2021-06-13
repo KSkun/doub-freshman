@@ -52,6 +52,7 @@ func makeRspGameSync(player model.Player) (param.RspGameSync, error) {
 		}
 		rsp.Flag = append(rsp.Flag, flagStr)
 	}
+	rsp.Dead = player.Dead
 	return rsp, nil
 }
 
@@ -93,4 +94,67 @@ func HandlerNewGame(ctx echo.Context) error {
 	}
 	rsp := param.RspNewGame{RspGameSync: _rsp, ID: player.ID}
 	return context.Success(ctx, rsp)
+}
+
+func HandlerSelectOption(ctx echo.Context) error {
+	req := param.ReqSelectOption{}
+	if err := ctx.Bind(&req); err != nil {
+		return context.Error(ctx, http.StatusBadRequest, "invalid request", err)
+	}
+	if err := ctx.Validate(req); err != nil {
+		return context.Error(ctx, http.StatusBadRequest, "invalid request", err)
+	}
+
+	m := model.GetModel()
+	defer m.Close()
+	player, err := m.GetPlayer(req.Player)
+	if err != nil {
+		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
+	}
+	player, err = selectOption(player, req.Option)
+	if err != nil {
+		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
+	}
+	err = m.SetPlayer(player)
+	if err != nil {
+		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
+	}
+	rsp, err := makeRspGameSync(player)
+	if err != nil {
+		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
+	}
+	return context.Success(ctx, rsp)
+}
+
+func HandlerSelectStage(ctx echo.Context) error {
+	req := param.ReqSelectStage{}
+	if err := ctx.Bind(&req); err != nil {
+		return context.Error(ctx, http.StatusBadRequest, "invalid request", err)
+	}
+	if err := ctx.Validate(req); err != nil {
+		return context.Error(ctx, http.StatusBadRequest, "invalid request", err)
+	}
+
+	m := model.GetModel()
+	defer m.Close()
+	player, err := m.GetPlayer(req.Player)
+	if err != nil {
+		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
+	}
+	player, _flagDiff, err := selectStage(player, req.Stage)
+	if err != nil {
+		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
+	}
+	err = m.SetPlayer(player)
+	if err != nil {
+		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
+	}
+	_rsp, err := makeRspGameSync(player)
+	if err != nil {
+		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
+	}
+	return context.Success(ctx, param.RspSelectStage{
+		RspGameSync: _rsp,
+		FlagDiff:    _flagDiff,
+	})
 }

@@ -13,6 +13,8 @@ type Player struct {
 	Next      string   `json:"next"`
 	Flag      []Flag   `json:"flag"`
 	LeftRound int      `json:"left_round"`
+	NowStage  string   `json:"now_stage"`
+	Dead      bool     `json:"dead"`
 }
 
 const keyPlayer = "player:%s"
