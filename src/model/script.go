@@ -86,17 +86,18 @@ func (m *model) GetStageWithCondition(condition bson.M) ([]Stage, error) {
 func (m *model) GetStageWithFlags(flag []string) ([]Stage, error) {
 	var filter []bson.M
 	for _, _flag := range flag {
-		filter = append(filter, bson.M{"enter_cond": bson.M{"flag": _flag}})
+		filter = append(filter, bson.M{"enter_cond": bson.M{"$elemMatch": bson.M{"flag": _flag}}})
 	}
 	return m.GetStageWithCondition(bson.M{"$and": filter})
 }
 
 func (m *model) GetStageWithFlag(flag string) ([]Stage, error) {
-	return m.GetStageWithFlags([]string{flag})
+	return m.GetStageWithCondition(bson.M{"enter_cond": bson.M{"$elemMatch": bson.M{"flag": flag}}})
 }
 
 func (m *model) GetStageWithFlagExclude(flag string) ([]Stage, error) {
-	return m.GetStageWithCondition(bson.M{"enter_cond": bson.M{"flag": flag, "op": "exclude"}})
+	return m.GetStageWithCondition(bson.M{"enter_cond": bson.M{"$elemMatch":
+		bson.M{"flag": flag, "op": "exclude"}}})
 }
 
 func (m *model) GetStage(id primitive.ObjectID) (Stage, error) {

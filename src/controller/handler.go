@@ -51,6 +51,10 @@ func makeRspGameSync(player model.Player) (param.RspGameSync, error) {
 	}
 	rsp.Flag = []string{}
 	for _, flag := range player.Flag {
+		// hide flag
+		if flag.Hide {
+			continue
+		}
 		flagStr := flag.Text
 		if flag.Value != 0 {
 			flagStr += fmt.Sprintf("%.1f", flag.Value)

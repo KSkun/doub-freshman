@@ -242,16 +242,20 @@ func increaseFlag(_player model.Player, flag model.Flag, inc float64) (model.Pla
 }
 
 func newPlayer(name string, major string) (model.Player, error) {
-	gpa := rand.Int()%(95-80+1) + 80 // random initial gpa in [80, 95]
+	gpa := rand.Int()%(99-80+1) + 80 // random initial gpa in [80, 99]
 	player := model.Player{
 		Name:      name,
 		Major:     major,
 		Selection: []string{},
 		Next:      "",
-		Flag:      []model.Flag{{Text: "加权", Value: float64(gpa)}},
+		Flag:      []model.Flag{},
 		LeftRound: constant.RoundHoliday,
 	}
-	player, err := addFlag(player, model.Flag{Text: "假期"})
+	player, err := addFlag(player, model.Flag{Text: "加权", Value: float64(gpa)})
+	if err != nil {
+		return player, err
+	}
+	player, err = addFlag(player, model.Flag{Text: "假期"})
 	if err != nil {
 		return player, err
 	}
@@ -267,6 +271,10 @@ func newPlayer(name string, major string) (model.Player, error) {
 }
 
 func selectOption(_player model.Player, _option int) (model.Player, []param.FlagDiff, string, error) {
+	if _player.NowStage == "" {
+		return _player, nil, "", errors.New("select stage first")
+	}
+
 	m := model.GetModel()
 	defer m.Close()
 	stage, err := m.GetStageByHex(_player.NowStage)
@@ -283,25 +291,36 @@ func selectOption(_player model.Player, _option int) (model.Player, []param.Flag
 	} else {
 		branch = option.Failed
 	}
-	// select a branch pointing to an empty stage
-	if branch.Next == primitive.NilObjectID {
-		return _player, nil, "", nil
-	}
-	next, err := m.GetStage(branch.Next)
-	if err != nil {
-		return _player, nil, "", err
-	}
 	player := _player
+	player.NowStage = ""
 	player, _flagDiff, err := applyEventList(player, branch.Event)
 	if err != nil {
 		return _player, nil, "", err
 	}
-	if next.Continue {
-		player.Next = branch.Next.Hex()
-	} else {
-		player.Selection = append(player.Selection, branch.Next.Hex())
+	if branch.Next != primitive.NilObjectID {
+		next, err := m.GetStage(branch.Next)
+		if err != nil {
+			return _player, nil, "", err
+		}
+		if next.Continue {
+			player.Next = branch.Next.Hex()
+		} else {
+			player.Selection = append(player.Selection, branch.Next.Hex())
+		}
 	}
 	result := strings.ReplaceAll(branch.Text, constant.NamePlaceholder, player.Name)
+
+	player.LeftRound--
+	// if a continuing stage is waiting to be trigger, do not switch phase
+	if player.LeftRound <= 0 && player.Next == "" {
+		var __flagDiff []param.FlagDiff
+		var err error
+		player, __flagDiff, err = switchPhase(player)
+		if err != nil {
+			return _player, nil, "", err
+		}
+		_flagDiff = append(_flagDiff, __flagDiff...)
+	}
 	return player, _flagDiff, result, err
 }
 
@@ -456,7 +475,12 @@ func switchPhase(player model.Player) (model.Player, []param.FlagDiff, error) {
 }
 
 func selectStage(_player model.Player, stageID string) (model.Player, []param.FlagDiff, error) {
+	if _player.NowStage != "" {
+		return _player, nil, errors.New("already selected")
+	}
+
 	var _flagDiff []param.FlagDiff
+	player := _player
 	found := false
 	if _player.Next != "" {
 		if _player.Next == stageID {
@@ -464,12 +488,18 @@ func selectStage(_player model.Player, stageID string) (model.Player, []param.Fl
 		} else {
 			return _player, nil, errors.New("continuing stage exists")
 		}
+		player.Next = ""
 	} else {
-		for _, stage := range _player.Selection {
+		idx := -1
+		for i, stage := range _player.Selection {
 			if stage == stageID {
 				found = true
+				idx = i
 				break
 			}
+		}
+		if idx != -1 {
+			player.Selection = append(player.Selection[:idx], player.Selection[idx+1:]...)
 		}
 	}
 	if !found {
@@ -478,18 +508,6 @@ func selectStage(_player model.Player, stageID string) (model.Player, []param.Fl
 
 	m := model.GetModel()
 	defer m.Close()
-	player := _player
 	player.NowStage = stageID
-	player.LeftRound--
-	// if a continuing stage is waiting to be trigger, do not switch phase
-	if player.LeftRound <= 0 && player.Next == "" {
-		var __flagDiff []param.FlagDiff
-		var err error
-		player, __flagDiff, err = switchPhase(player)
-		if err != nil {
-			return _player, nil, err
-		}
-		_flagDiff = append(_flagDiff, __flagDiff...)
-	}
 	return player, _flagDiff, nil
 }
