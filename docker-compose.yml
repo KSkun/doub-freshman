@@ -2,14 +2,12 @@ version: "3.8"
 
 services:
   mongo:
-    image: mongo:3.6.3
+    image: mongo:4.4.6
     volumes:
       - ./data/mongo:/data/db
       - /etc/localtime:/etc/localtime:ro
     environment:
       - TZ=Asia/Shanghai
-      - MONGO_INITDB_ROOT_USERNAME=doub-freshman
-      - MONGO_INITDB_ROOT_PASSWORD=Hustonline87542701doub-freshman
       - MONGO_INITDB_DATABASE=doub-freshman
     container_name: doub-freshman_mongo
     expose:
@@ -17,7 +15,7 @@ services:
     networks:
       - doub-freshman
   redis:
-    image: redis:4.0.8
+    image: redis:6.2.3
     expose:
       - "6379"
     environment:
@@ -33,9 +31,9 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/bingyan/go-web-container:3.0
     environment:
       - TZ=Asia/Shanghai
-      - ENV=prod
+      - ENV=dev
     ports:
-      - "3265:3000"
+      - "30010:3000"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./src:/app
