@@ -29,9 +29,10 @@ type Condition struct {
 }
 
 type OptionBranch struct {
-	Next  primitive.ObjectID `bson:"next"`
-	Text  string             `bson:"text"`
-	Event []Event            `bson:"event"`
+	Next   primitive.ObjectID `bson:"next"`
+	Text   string             `bson:"text"`
+	Event  []Event            `bson:"event"`
+	Result string             `json:"result"`
 }
 
 type Option struct {

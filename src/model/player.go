@@ -15,6 +15,7 @@ type Player struct {
 	LeftRound int      `json:"left_round"`
 	NowStage  string   `json:"now_stage"`
 	Dead      bool     `json:"dead"`
+	End       bool     `json:"end"`
 }
 
 const keyPlayer = "player:%s"
