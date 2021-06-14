@@ -11,9 +11,14 @@ import (
 )
 
 func retreiveOptionBranch(optionBranch param.ReqOptionBranch,mp map[string]primitive.ObjectID)model.OptionBranch{
+	var events []model.Event
+	for _,event:=range optionBranch.Event{
+		events=append(events,model.Event(event))
+	}
 	res:=model.OptionBranch{
 		Next: mp[optionBranch.Next],
 		Text: optionBranch.Text,
+		Event: events,
 	}
 	return res
 }
@@ -42,10 +47,6 @@ func retreiveStage(stage param.ReqStage,mp map[string]primitive.ObjectID)model.S
 	for _,option:=range stage.Option{
 		options=append(options,retreiveOption(option,mp))
 	}
-	var events []model.Event
-	for _,event:=range stage.Event{
-		events=append(events,model.Event(event))
-	}
 
 	res:=model.Stage{
 		ID:        mp[stage.ID],
@@ -54,7 +55,6 @@ func retreiveStage(stage param.ReqStage,mp map[string]primitive.ObjectID)model.S
 		Dead:      stage.Dead,
 		EnterCond: enterConds,
 		Option:    options,
-		Event:     events,
 		Tag:       stage.Tag,
 		Continue:  stage.Continue,
 		Delay:     stage.Delay,
