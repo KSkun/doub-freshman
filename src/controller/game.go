@@ -242,7 +242,7 @@ func increaseFlag(_player model.Player, flag model.Flag, inc float64) (model.Pla
 }
 
 func newPlayer(name string, major string) (model.Player, error) {
-	gpa := rand.Int()%(99-80+1) + 80 // random initial gpa in [80, 99]
+	gpa := rand.Int()%(95-80+1) + 80 // random initial gpa in [80, 95]
 	player := model.Player{
 		Name:      name,
 		Major:     major,
