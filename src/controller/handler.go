@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"fmt"
 	"github.com/KSkun/doub-freshman/constant"
 	"github.com/KSkun/doub-freshman/controller/param"
@@ -82,7 +81,8 @@ func HandlerNewGame(ctx echo.Context) error {
 		return context.Error(ctx, http.StatusInternalServerError, "internal error", err)
 	}
 	if found {
-		return context.Error(ctx, http.StatusBadRequest, "name used", errors.New("name used"))
+		//return context.Error(ctx, http.StatusBadRequest, "name used", errors.New("name used"))
+		// FIXME: for debug
 	}
 
 	player, err := newPlayer(req.Name, req.Major)
