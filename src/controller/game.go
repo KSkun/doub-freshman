@@ -7,6 +7,7 @@ import (
 	"github.com/KSkun/doub-freshman/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"math/rand"
+	"strings"
 )
 
 func strArrayToSet(arr []string) map[string]bool {
@@ -265,15 +266,15 @@ func newPlayer(name string, major string) (model.Player, error) {
 	return player, nil
 }
 
-func selectOption(_player model.Player, _option int) (model.Player, []param.FlagDiff, error) {
+func selectOption(_player model.Player, _option int) (model.Player, []param.FlagDiff, string, error) {
 	m := model.GetModel()
 	defer m.Close()
 	stage, err := m.GetStageByHex(_player.NowStage)
 	if err != nil {
-		return _player, nil, err
+		return _player, nil, "", err
 	}
 	if _option < 0 || _option >= len(stage.Option) {
-		return _player, nil, errors.New("option index out of bound")
+		return _player, nil, "", errors.New("option index out of bound")
 	}
 	option := stage.Option[_option]
 	branch := model.OptionBranch{}
@@ -284,23 +285,24 @@ func selectOption(_player model.Player, _option int) (model.Player, []param.Flag
 	}
 	// select a branch pointing to an empty stage
 	if branch.Next == primitive.NilObjectID {
-		return _player, nil, nil
+		return _player, nil, "", nil
 	}
 	next, err := m.GetStage(branch.Next)
 	if err != nil {
-		return _player, nil, err
+		return _player, nil, "", err
 	}
 	player := _player
 	player, _flagDiff, err := applyEventList(player, branch.Event)
 	if err != nil {
-		return _player, nil, err
+		return _player, nil, "", err
 	}
 	if next.Continue {
 		player.Next = branch.Next.Hex()
 	} else {
 		player.Selection = append(player.Selection, branch.Next.Hex())
 	}
-	return player, _flagDiff, err
+	result := strings.ReplaceAll(branch.Text, constant.NamePlaceholder, player.Name)
+	return player, _flagDiff, result, err
 }
 
 func applySingleEvent(player model.Player, event model.Event) (model.Player, []param.FlagDiff, error) {
@@ -320,7 +322,7 @@ func applySingleEvent(player model.Player, event model.Event) (model.Player, []p
 			return _player, []param.FlagDiff{{Type: "add", Flag: flag}}, err
 		}
 	case "death":
-		player.Dead = true
+		player = setDead(player)
 		return player, nil, nil
 	case "extend":
 		ext, extOK := event.Value["extend"].(int)
@@ -348,6 +350,62 @@ func applyEventList(player model.Player, event []model.Event) (model.Player, []p
 	return player, _flagDiff, nil
 }
 
+func setEnd(player model.Player) model.Player {
+	player.End = true
+	player.Next = ""
+	player.Selection = []string{}
+	return player
+}
+
+func setDead(player model.Player) model.Player {
+	player.Dead = true
+	player.Next = ""
+	player.Selection = []string{}
+	return player
+}
+
+func switchPhase2(player model.Player) (model.Player, []param.FlagDiff, error) {
+	var _flagDiff []param.FlagDiff
+	idx := -1
+	for i, flag := range player.Flag {
+		if flag.Text == "萌新" || flag.Text == "老油条" || flag.Text == "毕业" {
+			idx = i
+			break
+		}
+	}
+	next := ""
+	end := false
+	if player.Flag[idx].Text == "萌新" {
+		next = "老油条"
+	}
+	if player.Flag[idx].Text == "老油条" {
+		next = "毕业"
+	}
+	if player.Flag[idx].Text == "毕业" {
+		next = ""
+		end = true
+	}
+	// game end
+	if end {
+		player = setEnd(player)
+		return player, nil, nil
+	}
+	_flagDiff = append(_flagDiff, param.FlagDiff{
+		Type: "del",
+		Flag: player.Flag[idx].Text,
+	})
+	_flagDiff = append(_flagDiff, param.FlagDiff{
+		Type: "add",
+		Flag: next,
+	})
+	player, err := deleteFlag(player, player.Flag[idx])
+	if err != nil {
+		return player, nil, err
+	}
+	player, err = addFlag(player, model.Flag{Text: next})
+	return player, _flagDiff, err
+}
+
 func switchPhase(player model.Player) (model.Player, []param.FlagDiff, error) {
 	var _flagDiff []param.FlagDiff
 	idx := -1
@@ -358,12 +416,14 @@ func switchPhase(player model.Player) (model.Player, []param.FlagDiff, error) {
 		}
 	}
 	next := ""
+	_switchPhase2 := false
 	if player.Flag[idx].Text == "假期" {
 		next = "在校"
 		player.LeftRound = constant.RoundDaily
 	} else {
 		next = "假期"
 		player.LeftRound = constant.RoundHoliday
+		_switchPhase2 = true
 	}
 
 	_flagDiff = append(_flagDiff, param.FlagDiff{
@@ -380,6 +440,18 @@ func switchPhase(player model.Player) (model.Player, []param.FlagDiff, error) {
 		return player, nil, err
 	}
 	player, err = addFlag(player, model.Flag{Text: next})
+	if err != nil {
+		return player, nil, err
+	}
+	// switch grade phase
+	if _switchPhase2 {
+		var __flagDiff []param.FlagDiff
+		player, __flagDiff, err = switchPhase2(player)
+		if err != nil {
+			return player, nil, err
+		}
+		_flagDiff = append(_flagDiff, __flagDiff...)
+	}
 	return player, _flagDiff, err
 }
 

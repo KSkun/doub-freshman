@@ -23,6 +23,8 @@ type RspGameSync struct {
 	Selection []RspNextStage `json:"selection"`
 	Flag      []string       `json:"flag"`
 	Dead      bool           `json:"dead"`
+	End       bool           `json:"end"`
+	Result    string         `json:"result"`
 }
 
 type RspNewGame struct {
@@ -51,6 +53,11 @@ type RspSyncWithDiff struct {
 	FlagDiff []FlagDiff `json:"flag_diff"`
 }
 
+type RspSyncWithResult struct {
+	RspSyncWithDiff
+	Result string `json:"result"`
+}
+
 type ReqFlag struct {
 	Text  string  `json:"text"`
 	Value float64 `json:"value"`
@@ -75,6 +82,7 @@ type ReqOption struct {
 	Failed    ReqOptionBranch `json:"failed"`
 	Condition []ReqCondition  `json:"condition"`
 }
+
 type ReqEvent struct {
 	Type  string                 `json:"type"`
 	Value map[string]interface{} `json:"value"`
