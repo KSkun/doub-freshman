@@ -255,8 +255,8 @@ func newPlayer(name string, major string) (model.Player, error) {
 	if err != nil {
 		return player, err
 	}
-	//player, err = addFlag(player, model.Flag{Text: "假期"})
-	player, err = addFlag(player, model.Flag{Text: "在校"})
+	player, err = addFlag(player, model.Flag{Text: "假期"})
+	//player, err = addFlag(player, model.Flag{Text: "在校"})
 	// FIXME: for debug
 	if err != nil {
 		return player, err
