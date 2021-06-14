@@ -5,7 +5,7 @@ package constant
 const (
 	// FIXME: for debug
 	RoundHoliday = 1
-	RoundDaily = 2
+	RoundDaily = 6
 
 	NamePlaceholder = "${name}"
 )

@@ -9,8 +9,6 @@ import (
 	"net/http"
 )
 
-// TODO: 完成controller
-
 func HelloWorldHandler(c echo.Context) error {
 	return c.String(200, "Hello World!")
 }
