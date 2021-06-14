@@ -1,8 +1,8 @@
 # build
-FROM golang:1.15.5-alpine3.12 AS build
+FROM golang:1.16.5-alpine3.13 AS build
 COPY ./src /src
 WORKDIR /src
-ENV "GOPROXY" "https://goproxy.io"
+ENV "GOPROXY" "https://goproxy.cn,direct"
 RUN go build -o /build/app
 
 # iamge
