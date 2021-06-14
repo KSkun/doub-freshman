@@ -7,6 +7,7 @@ import (
 	"github.com/KSkun/doub-freshman/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"math/rand"
+	"strings"
 )
 
 func strArrayToSet(arr []string) map[string]bool {
@@ -300,7 +301,8 @@ func selectOption(_player model.Player, _option int) (model.Player, []param.Flag
 	} else {
 		player.Selection = append(player.Selection, branch.Next.Hex())
 	}
-	return player, _flagDiff, branch.Result, err
+	result := strings.ReplaceAll(branch.Text, constant.NamePlaceholder, player.Name)
+	return player, _flagDiff, result, err
 }
 
 func applySingleEvent(player model.Player, event model.Event) (model.Player, []param.FlagDiff, error) {

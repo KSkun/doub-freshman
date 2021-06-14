@@ -3,23 +3,28 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"github.com/KSkun/doub-freshman/constant"
 	"github.com/KSkun/doub-freshman/controller/param"
 	"github.com/KSkun/doub-freshman/model"
 	"github.com/KSkun/doub-freshman/util/context"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
+	"strings"
 )
 
-func makeRspNextStage(stage model.Stage) param.RspNextStage {
+func makeRspNextStage(player model.Player, stage model.Stage) param.RspNextStage {
 	var option []string
 	for _, _option := range stage.Option {
-		option = append(option, _option.Text)
+		text := strings.ReplaceAll(_option.Text, constant.NamePlaceholder, player.Name)
+		option = append(option, text)
 	}
+	text := strings.ReplaceAll(stage.Text, constant.NamePlaceholder, player.Name)
+	title := strings.ReplaceAll(stage.Title, constant.NamePlaceholder, player.Name)
 	return param.RspNextStage{
 		ID:     stage.ID.Hex(),
-		Text:   stage.Text,
-		Title:  stage.Title,
+		Text:   text,
+		Title:  title,
 		Option: option,
 		Delay:  stage.Delay,
 	}
@@ -34,7 +39,7 @@ func makeRspGameSync(player model.Player) (param.RspGameSync, error) {
 		if err != nil {
 			return rsp, err
 		}
-		rsp.Next = makeRspNextStage(t)
+		rsp.Next = makeRspNextStage(player, t)
 	}
 	rsp.Selection = []param.RspNextStage{}
 	for _, hex := range player.Selection {
@@ -42,7 +47,7 @@ func makeRspGameSync(player model.Player) (param.RspGameSync, error) {
 		if err != nil {
 			return rsp, err
 		}
-		rsp.Selection = append(rsp.Selection, makeRspNextStage(t))
+		rsp.Selection = append(rsp.Selection, makeRspNextStage(player, t))
 	}
 	rsp.Flag = []string{}
 	for _, flag := range player.Flag {
@@ -53,6 +58,7 @@ func makeRspGameSync(player model.Player) (param.RspGameSync, error) {
 		rsp.Flag = append(rsp.Flag, flagStr)
 	}
 	rsp.Dead = player.Dead
+	rsp.End = player.End
 	return rsp, nil
 }
 
